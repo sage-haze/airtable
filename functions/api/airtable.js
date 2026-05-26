@@ -1,19 +1,34 @@
 export async function onRequestGet({ env }) {
-  const { AIRTABLE_TOKEN, AIRTABLE_BASE_ID, AIRTABLE_TABLE_NAME } = env;
+  const {
+    AIRTABLE_TOKEN,
+    AIRTABLE_BASE_ID,
+    AIRTABLE_TABLE_NAME,
+    AIRTABLE_VIEW,
+  } = env;
 
-  if (!AIRTABLE_TOKEN || !AIRTABLE_BASE_ID || !AIRTABLE_TABLE_NAME) {
+  if (
+    !AIRTABLE_TOKEN ||
+    !AIRTABLE_BASE_ID ||
+    !AIRTABLE_TABLE_NAME
+  ) {
     return Response.json(
       {
         error:
-          "Missing AIRTABLE_TOKEN, AIRTABLE_BASE_ID, or AIRTABLE_TABLE_NAME.",
+          "Missing Airtable environment variables.",
       },
       { status: 500 }
     );
   }
 
-  const airtableUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(
-    AIRTABLE_TABLE_NAME
-  )}`;
+  const params = new URLSearchParams();
+
+  if (AIRTABLE_VIEW) {
+    params.append("view", AIRTABLE_VIEW);
+  }
+
+  const airtableUrl =
+    `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/` +
+    `${encodeURIComponent(AIRTABLE_TABLE_NAME)}?${params.toString()}`;
 
   const airtableResponse = await fetch(airtableUrl, {
     headers: {
@@ -26,7 +41,7 @@ export async function onRequestGet({ env }) {
   if (!airtableResponse.ok) {
     return Response.json(
       {
-        error: "Airtable request failed.",
+        error: "Airtable request failed",
         details: data,
       },
       { status: airtableResponse.status }
