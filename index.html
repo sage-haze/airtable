@@ -2,7 +2,12 @@
 <html>
   <head>
     <title>Airtable Student Updates</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         font-family: Arial, sans-serif;
         max-width: 100%;
@@ -27,6 +32,8 @@
         border-radius: 10px;
         padding: 16px;
         margin-bottom: 20px;
+        width: fit-content;
+        max-width: 100%;
       }
 
       label {
@@ -36,7 +43,8 @@
       }
 
       select {
-        width: 100%;
+        width: 280px;
+        max-width: 100%;
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 8px;
@@ -45,11 +53,16 @@
       }
 
       .records-container {
-        display:flex;
-        gap:20px;
-        overflow-x:auto;
-        padding-bottom:20px;
-        align-items:flex-start;
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 20px;
+        overflow-x: auto;
+        overflow-y: visible;
+        width: 100%;
+        max-width: 100%;
+        padding: 4px 4px 20px;
+        align-items: flex-start;
+        scroll-snap-type: x proximity;
       }
 
       .record {
@@ -57,53 +70,52 @@
         border: 1px solid #ddd;
         border-radius: 14px;
         padding: 20px;
-        min-width: 420px;
-        max-width: 520px;
-        flex-shrink:0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        flex: 0 0 420px;
+        max-width: 420px;
+        min-width: 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        scroll-snap-align: start;
       }
 
       .record-header {
-        display:flex;
-        justify-content:space-between;
-        gap:16px;
-        margin-bottom:16px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .header-main {
+        min-width: 0;
       }
 
       .type-pill {
-        display:inline-block;
-        padding:6px 12px;
-        border-radius:999px;
-        font-size:12px;
-        font-weight:600;
-        background:#e0e7ff;
-        color:#3730a3;
-        margin-bottom:10px;
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #e0e7ff;
+        color: #3730a3;
+        margin-bottom: 10px;
+        max-width: 100%;
+        overflow-wrap: anywhere;
       }
 
       .module-title {
-        font-size:24px;
-        font-weight:700;
-        line-height:1.2;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.2;
       }
 
       .meta-right {
-        text-align:right;
-        color:#4b5563;
-        font-size:14px;
-        line-height:1.5;
-      }
-
-      .student-name {
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 8px;
-      }
-
-      .record-meta {
-        color: #555;
-        margin-bottom: 16px;
+        flex: 0 0 auto;
+        text-align: right;
+        color: #4b5563;
+        font-size: 14px;
         line-height: 1.5;
+        white-space: nowrap;
       }
 
       .field {
@@ -115,6 +127,12 @@
         margin-bottom: 4px;
       }
 
+      .rich-text,
+      .rich-text * {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
 
       .rich-text p {
         margin: 6px 0;
@@ -137,9 +155,29 @@
         margin: 10px 0 6px;
       }
 
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
       .empty {
         color: #999;
         font-style: italic;
+      }
+
+      @media (max-width: 520px) {
+        .record {
+          flex-basis: 86vw;
+          max-width: 86vw;
+        }
+
+        .record-header {
+          flex-direction: column;
+        }
+
+        .meta-right {
+          text-align: left;
+        }
       }
     </style>
   </head>
@@ -157,250 +195,6 @@
 
     <div id="records">Loading Airtable data...</div>
 
-    <script>
-      let allRecords = [];
-
-      function escapeHtml(value) {
-        return String(value)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
-
-      function normalizeValue(value) {
-        if (value === undefined || value === null) return "";
-
-        if (Array.isArray(value)) {
-          return value
-            .map((item) => normalizeValue(item))
-            .filter(Boolean)
-            .join(", ");
-        }
-
-        if (typeof value === "object") {
-          if (value.name) return String(value.name).trim();
-          return JSON.stringify(value);
-        }
-
-        return String(value).trim();
-      }
-
-      function getStudentName(record) {
-        return normalizeValue(record.fields["student_full_name"]) || "Unnamed student";
-      }
-
-      function formatDate(value) {
-        const normalized = normalizeValue(value);
-        if (!normalized) return '<span class="empty">Not provided</span>';
-
-        const date = new Date(normalized);
-        if (Number.isNaN(date.getTime())) return escapeHtml(normalized);
-
-        return escapeHtml(
-          date.toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })
-        );
-      }
-
-      function formatDuration(value) {
-        const normalized = normalizeValue(value);
-        const seconds = Number(normalized);
-        if (Number.isNaN(seconds)) return formatPlainValue(value);
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        return `${String(hrs).padStart(2,"0")}:${String(mins).padStart(2,"0")}`;
-      }
-
-      function formatPlainValue(value) {
-        const normalized = normalizeValue(value);
-
-        if (!normalized) {
-          return '<span class="empty">Not provided</span>';
-        }
-
-        return escapeHtml(normalized);
-      }
-
-      function formatRichText(value) {
-        const normalized = normalizeValue(value);
-
-        if (!normalized) {
-          return '<span class="empty">Not provided</span>';
-        }
-
-        let html = escapeHtml(normalized);
-
-        // Basic Markdown-style formatting for Airtable long text fields.
-        html = html.replace(/^### (.*)$/gm, "<h4>$1</h4>");
-        html = html.replace(/^## (.*)$/gm, "<h3>$1</h3>");
-        html = html.replace(/^# (.*)$/gm, "<h2>$1</h2>");
-        html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-        html = html.replace(/__(.*?)__/g, "<strong>$1</strong>");
-        html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
-        html = html.replace(/_(.*?)_/g, "<em>$1</em>");
-
-        const lines = html.split("\n");
-        const output = [];
-        let inList = false;
-
-        for (const line of lines) {
-          const bulletMatch = line.match(/^\s*[-*•]\s+(.+)$/);
-          const numberedMatch = line.match(/^\s*\d+\.\s+(.+)$/);
-
-          if (bulletMatch || numberedMatch) {
-            if (!inList) {
-              output.push("<ul>");
-              inList = true;
-            }
-            output.push(`<li>${bulletMatch ? bulletMatch[1] : numberedMatch[1]}</li>`);
-          } else {
-            if (inList) {
-              output.push("</ul>");
-              inList = false;
-            }
-
-            if (line.trim() === "") {
-              output.push("");
-            } else if (line.startsWith("<h")) {
-              output.push(line);
-            } else {
-              output.push(`<p>${line}</p>`);
-            }
-          }
-        }
-
-        if (inList) output.push("</ul>");
-
-        return output.join("") + `</div>`;
-      }
-
-      function setupStudentFilter(records) {
-        const filter = document.getElementById("studentFilter");
-
-        const studentNames = Array.from(
-          new Set(records.map(getStudentName).filter(Boolean))
-        ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-
-        if (studentNames.length === 0) {
-          filter.innerHTML = "<option>No students found</option>";
-          filter.disabled = true;
-          return;
-        }
-
-        filter.innerHTML = studentNames
-          .map((name) => {
-            const option = document.createElement("option");
-            option.value = name;
-            option.textContent = name;
-            return option.outerHTML;
-          })
-          .join("") + `</div>`;
-
-        filter.disabled = false;
-        filter.value = studentNames[0];
-
-        filter.addEventListener("change", () => {
-          renderRecords(filter.value);
-        });
-
-        renderRecords(filter.value);
-      }
-
-      function renderRecords(selectedStudentName) {
-        const container = document.getElementById("records");
-        const selectedName = normalizeValue(selectedStudentName).toLowerCase();
-
-        const filteredRecords = allRecords.filter(
-          (record) => getStudentName(record).toLowerCase() === selectedName
-        );
-
-        if (filteredRecords.length === 0) {
-          container.innerHTML = '<p class="empty">No records found for this student.</p>';
-          return;
-        }
-
-        container.innerHTML = `<div class="records-container">` + filteredRecords
-          .map((record) => {
-            const fields = record.fields;
-
-            return `
-              <div class="record">
-                <div class="record-header">
-                  <div>
-                    <div class="type-pill">${formatPlainValue(fields["Type"])}</div>
-                    <div class="module-title">${formatPlainValue(fields["Module"])}</div>
-                  </div>
-
-                  <div class="meta-right">
-                    <div>${formatDate(fields["Date"])}</div>
-                    <div>${formatDuration(fields["Duration"])}</div>
-                  </div>
-                </div>
-
-                <div class="field">
-                  <div class="field-label">Summary</div>
-                  <div class="rich-text">${formatRichText(fields["Summary"])}</div>
-                </div>
-
-                <div class="field">
-                  <div class="field-label">Tasks Assigned</div>
-                  <div class="rich-text">${formatRichText(fields["Tasks Assigned"])}</div>
-                </div>
-
-                <div class="field">
-                  <div class="field-label">What we'll cover next time</div>
-                  <div class="rich-text">${formatRichText(fields["What we'll cover next time"])}</div>
-                </div>
-              </div>
-            `;
-          })
-          .join("") + `</div>`;
-      }
-
-      async function loadAirtable() {
-        const container = document.getElementById("records");
-        const filter = document.getElementById("studentFilter");
-
-        try {
-          const res = await fetch("/api/airtable");
-          const data = await res.json();
-
-          if (!res.ok) {
-            container.innerHTML = `
-              <div class="record">
-                <strong>Error loading Airtable data</strong>
-                <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
-              </div>
-            `;
-            filter.innerHTML = "<option>Unable to load students</option>";
-            return;
-          }
-
-          if (!data.records || data.records.length === 0) {
-            container.innerHTML = '<p class="empty">No records found.</p>';
-            filter.innerHTML = "<option>No students found</option>";
-            return;
-          }
-
-          allRecords = data.records;
-          setupStudentFilter(allRecords);
-        } catch (error) {
-          container.innerHTML = `
-            <div class="record">
-              <strong>Something went wrong</strong>
-              <p>${escapeHtml(error.message)}</p>
-            </div>
-          `;
-          filter.innerHTML = "<option>Unable to load students</option>";
-        }
-      }
-
-      loadAirtable();
-    </script>
+    <script src="scripts/script.js"></script>
   </body>
 </html>
