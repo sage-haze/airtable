@@ -136,7 +136,7 @@ function setupStudentFilter(records) {
     return;
   }
 
-  filter.innerHTML = studentNames
+  filter.innerHTML = '<option value="">All students</option>' + studentNames
     .map((name) => {
       const option = document.createElement("option");
       option.value = name;
@@ -146,7 +146,7 @@ function setupStudentFilter(records) {
     .join("");
 
   filter.disabled = false;
-  filter.value = studentNames[0];
+  filter.value = "";
 
   filter.addEventListener("change", () => {
     renderRecords(filter.value);
@@ -158,13 +158,16 @@ function setupStudentFilter(records) {
 function renderRecords(selectedStudentName) {
   const container = document.getElementById("records");
   const selectedName = normalizeValue(selectedStudentName).toLowerCase();
+  const showAllStudents = !selectedName;
 
-  const filteredRecords = allRecords.filter(
-    (record) => getStudentName(record).toLowerCase() === selectedName
-  );
+  const filteredRecords = showAllStudents
+    ? allRecords
+    : allRecords.filter(
+        (record) => getStudentName(record).toLowerCase() === selectedName
+      );
 
   if (filteredRecords.length === 0) {
-    container.innerHTML = '<p class="empty">No records found for this student.</p>';
+    container.innerHTML = '<p class="empty">No records found.</p>';
     return;
   }
 
@@ -180,6 +183,7 @@ function renderRecords(selectedStudentName) {
                 <div class="header-main">
                   <div class="type-pill">${formatPlainValue(fields["Type"])}</div>
                   <div class="module-title">${formatPlainValue(fields["Module"])}</div>
+                  ${showAllStudents ? `<div class="student-name">${formatPlainValue(fields["student_full_name"])}</div>` : ""}
                 </div>
 
                 <div class="meta-right">

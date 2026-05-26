@@ -26,6 +26,19 @@
         margin-bottom: 24px;
       }
 
+      .top-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+
+      .page-heading {
+        flex: 1 1 auto;
+        min-width: 240px;
+      }
+
       .filter-bar {
         display: inline-block;
         background: white;
@@ -39,8 +52,8 @@
 
       
       .shortcuts-box {
-        width: 100%;
-        max-width: 900px;
+        flex: 0 1 560px;
+        margin-bottom: 0;
       }
 
       .shortcuts-links {
@@ -149,30 +162,17 @@
         margin-top: 14px;
       }
 
-      .field-
-      .shortcuts-box {
-        width: 100%;
-        max-width: 900px;
+      .field-label {
+        font-weight: 700;
+        margin-bottom: 6px;
       }
 
-      .shortcuts-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .shortcuts-links a {
-        text-decoration: none;
-        color: #2563eb;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        padding: 8px 12px;
-        border-radius: 8px;
+      .student-name {
+        display: inline-block;
+        margin-top: 8px;
         font-size: 14px;
-      }
-
-      .shortcuts-links a:hover {
-        background: #dbeafe;
+        font-weight: 700;
+        color: #374151;
       }
 
       label {
@@ -218,6 +218,16 @@
         font-style: italic;
       }
 
+      @media (max-width: 760px) {
+        .top-row {
+          flex-direction: column;
+        }
+
+        .shortcuts-box {
+          width: 100%;
+        }
+      }
+
       @media (max-width: 520px) {
         .record {
           flex-basis: 86vw;
@@ -236,15 +246,19 @@
   </head>
 
   <body>
-    <h1>Student Updates</h1>
-    <p class="subtitle">Select a student to view their Airtable records.</p>
+    <div class="top-row">
+      <div class="page-heading">
+        <h1>Student Updates</h1>
+        <p class="subtitle">Select a student to view their Airtable records.</p>
+      </div>
 
-    <div class="filter-bar shortcuts-box">
-      <label>Helpful shortcuts</label>
-      <div class="shortcuts-links">
-        <a href="https://portal.ivyprep.com.sg/" target="_blank">Airtable Portal</a>
-        <a href="https://docs.google.com/spreadsheets/d/1P_2A43kCkBhTubo-WtRHR_oWg5C1YcofikC8p4i4nf4/edit?gid=408820543#gid=408820543" target="_blank">Sessions overview</a>
-        <a href="https://docs.google.com/spreadsheets/d/1VU8fyN67q6xr-m8VngIzkHPs2lsiRB5jNH0Kc2ZU8Bw/edit?gid=0#gid=0" target="_blank">Session Summary</a>
+      <div class="filter-bar shortcuts-box">
+        <label>Helpful shortcuts</label>
+        <div class="shortcuts-links">
+          <a href="https://portal.ivyprep.com.sg/" target="_blank">Airtable Portal</a>
+          <a href="https://docs.google.com/spreadsheets/d/1P_2A43kCkBhTubo-WtRHR_oWg5C1YcofikC8p4i4nf4/edit?gid=408820543#gid=408820543" target="_blank">Sessions overview</a>
+          <a href="https://docs.google.com/spreadsheets/d/1VU8fyN67q6xr-m8VngIzkHPs2lsiRB5jNH0Kc2ZU8Bw/edit?gid=0#gid=0" target="_blank">Session Summary</a>
+        </div>
       </div>
     </div>
 
