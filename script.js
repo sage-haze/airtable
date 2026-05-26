@@ -1,163 +1,4 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Airtable Student Updates</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        max-width: 100%;
-        margin: 40px auto;
-        padding: 0 20px;
-        background: #f7f7f7;
-        color: #111827;
-      }
 
-      h1 {
-        margin-bottom: 8px;
-      }
-
-      .subtitle {
-        color: #6b7280;
-        margin-bottom: 24px;
-      }
-
-      .filter-bar {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 16px;
-        margin-bottom: 20px;
-      }
-
-      label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 8px;
-      }
-
-      select {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        font-size: 16px;
-        background: white;
-      }
-
-      .records-container {
-        display:flex;
-        gap:20px;
-        overflow-x:auto;
-        padding-bottom:20px;
-        align-items:flex-start;
-      }
-
-      .record {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 14px;
-        padding: 20px;
-        min-width: 420px;
-        max-width: 520px;
-        flex-shrink:0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-      }
-
-      .record-header {
-        display:flex;
-        justify-content:space-between;
-        gap:16px;
-        margin-bottom:16px;
-      }
-
-      .type-pill {
-        display:inline-block;
-        padding:6px 12px;
-        border-radius:999px;
-        font-size:12px;
-        font-weight:600;
-        background:#e0e7ff;
-        color:#3730a3;
-        margin-bottom:10px;
-      }
-
-      .module-title {
-        font-size:24px;
-        font-weight:700;
-        line-height:1.2;
-      }
-
-      .meta-right {
-        text-align:right;
-        color:#4b5563;
-        font-size:14px;
-        line-height:1.5;
-      }
-
-      .student-name {
-        font-size: 22px;
-        font-weight: bold;
-        margin-bottom: 8px;
-      }
-
-      .record-meta {
-        color: #555;
-        margin-bottom: 16px;
-        line-height: 1.5;
-      }
-
-      .field {
-        margin-top: 14px;
-      }
-
-      .field-label {
-        font-weight: bold;
-        margin-bottom: 4px;
-      }
-
-
-      .rich-text p {
-        margin: 6px 0;
-        line-height: 1.6;
-      }
-
-      .rich-text ul {
-        margin: 8px 0;
-        padding-left: 22px;
-      }
-
-      .rich-text li {
-        margin: 4px 0;
-        line-height: 1.5;
-      }
-
-      .rich-text h2,
-      .rich-text h3,
-      .rich-text h4 {
-        margin: 10px 0 6px;
-      }
-
-      .empty {
-        color: #999;
-        font-style: italic;
-      }
-    </style>
-  </head>
-
-  <body>
-    <h1>Student Updates</h1>
-    <p class="subtitle">Select a student to view their Airtable records.</p>
-
-    <div class="filter-bar">
-      <label for="studentFilter">Filter by student</label>
-      <select id="studentFilter" disabled>
-        <option>Loading students...</option>
-      </select>
-    </div>
-
-    <div id="records">Loading Airtable data...</div>
-
-    <script>
       let allRecords = [];
 
       function escapeHtml(value) {
@@ -205,15 +46,6 @@
             day: "numeric",
           })
         );
-      }
-
-      function formatDuration(value) {
-        const normalized = normalizeValue(value);
-        const seconds = Number(normalized);
-        if (Number.isNaN(seconds)) return formatPlainValue(value);
-        const hrs = Math.floor(seconds / 3600);
-        const mins = Math.floor((seconds % 3600) / 60);
-        return `${String(hrs).padStart(2,"0")}:${String(mins).padStart(2,"0")}`;
       }
 
       function formatPlainValue(value) {
@@ -276,7 +108,7 @@
 
         if (inList) output.push("</ul>");
 
-        return output.join("") + `</div>`;
+        return output.join("");
       }
 
       function setupStudentFilter(records) {
@@ -299,7 +131,7 @@
             option.textContent = name;
             return option.outerHTML;
           })
-          .join("") + `</div>`;
+          .join("");
 
         filter.disabled = false;
         filter.value = studentNames[0];
@@ -324,22 +156,20 @@
           return;
         }
 
-        container.innerHTML = `<div class="records-container">` + filteredRecords
+        container.innerHTML = filteredRecords
           .map((record) => {
             const fields = record.fields;
 
             return `
               <div class="record">
-                <div class="record-header">
-                  <div>
-                    <div class="type-pill">${formatPlainValue(fields["Type"])}</div>
-                    <div class="module-title">${formatPlainValue(fields["Module"])}</div>
-                  </div>
+                <div class="student-name">
+                  ${formatPlainValue(fields["student_full_name"])}
+                </div>
 
-                  <div class="meta-right">
-                    <div>${formatDate(fields["Date"])}</div>
-                    <div>${formatDuration(fields["Duration"])}</div>
-                  </div>
+                <div class="record-meta">
+                  <div><strong>Date:</strong> ${formatDate(fields["Date"])}</div>
+                  <div><strong>Duration:</strong> ${formatPlainValue(fields["Duration"])}</div>
+                  <div><strong>Module:</strong> ${formatPlainValue(fields["Module"])}</div>
                 </div>
 
                 <div class="field">
@@ -359,7 +189,7 @@
               </div>
             `;
           })
-          .join("") + `</div>`;
+          .join("");
       }
 
       async function loadAirtable() {
@@ -401,6 +231,4 @@
       }
 
       loadAirtable();
-    </script>
-  </body>
-</html>
+    
