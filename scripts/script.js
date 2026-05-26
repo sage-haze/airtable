@@ -172,7 +172,8 @@ function renderRecords(selectedStudentName) {
   }
 
   container.innerHTML = `
-    <div class="records-container">
+    <p class="scroll-hint">Scroll sideways using the bar below, Shift + mouse wheel, or your trackpad.</p>
+    <div class="records-container" id="recordsScroller">
       ${filteredRecords
         .map((record) => {
           const fields = record.fields;
@@ -224,6 +225,24 @@ function renderRecords(selectedStudentName) {
         .join("")}
     </div>
   `;
+
+  enableHorizontalMouseScroll();
+}
+
+function enableHorizontalMouseScroll() {
+  const scroller = document.getElementById("recordsScroller");
+  if (!scroller) return;
+
+  scroller.addEventListener(
+    "wheel",
+    (event) => {
+      if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+        scroller.scrollLeft += event.deltaY;
+        event.preventDefault();
+      }
+    },
+    { passive: false }
+  );
 }
 
 async function loadAirtable() {
