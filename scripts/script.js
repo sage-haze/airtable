@@ -188,20 +188,32 @@ function renderRecords(selectedStudentName) {
                 </div>
               </div>
 
-              <div class="field">
-                <div class="field-label">Summary</div>
-                <div class="rich-text">${formatRichText(fields["Summary"])}</div>
-              </div>
+              ${normalizeValue(fields["Type"]).toLowerCase() === "note / email" ? `
+                <div class="field">
+                  <div class="field-label">Subject</div>
+                  <div class="rich-text">${formatRichText(fields["Subject"])}</div>
+                </div>
 
-              <div class="field">
-                <div class="field-label">Tasks Assigned</div>
-                <div class="rich-text">${formatRichText(fields["Tasks Assigned"])}</div>
-              </div>
+                <div class="field">
+                  <div class="field-label">Email / Note</div>
+                  <div class="rich-text">${formatRichText(fields["Email / Note"])}</div>
+                </div>
+              ` : `
+                <div class="field">
+                  <div class="field-label">Summary</div>
+                  <div class="rich-text">${formatRichText(fields["Summary"])}</div>
+                </div>
 
-              <div class="field">
-                <div class="field-label">What we'll cover next time</div>
-                <div class="rich-text">${formatRichText(fields["What we'll cover next time"])}</div>
-              </div>
+                <div class="field">
+                  <div class="field-label">Tasks Assigned</div>
+                  <div class="rich-text">${formatRichText(fields["Tasks Assigned"])}</div>
+                </div>
+
+                <div class="field">
+                  <div class="field-label">What we'll cover next time</div>
+                  <div class="rich-text">${formatRichText(fields["What we'll cover next time"])}</div>
+                </div>
+              `}
             </article>
           `;
         })

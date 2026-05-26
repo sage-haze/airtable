@@ -27,6 +27,7 @@
       }
 
       .filter-bar {
+        display: inline-block;
         background: white;
         border: 1px solid #ddd;
         border-radius: 10px;
@@ -34,6 +35,32 @@
         margin-bottom: 20px;
         width: fit-content;
         max-width: 100%;
+      }
+
+      
+      .shortcuts-box {
+        width: 100%;
+        max-width: 900px;
+      }
+
+      .shortcuts-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .shortcuts-links a {
+        text-decoration: none;
+        color: #2563eb;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .shortcuts-links a:hover {
+        background: #dbeafe;
       }
 
       label {
@@ -122,7 +149,33 @@
         margin-top: 14px;
       }
 
-      .field-label {
+      .field-
+      .shortcuts-box {
+        width: 100%;
+        max-width: 900px;
+      }
+
+      .shortcuts-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      .shortcuts-links a {
+        text-decoration: none;
+        color: #2563eb;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .shortcuts-links a:hover {
+        background: #dbeafe;
+      }
+
+      label {
         font-weight: bold;
         margin-bottom: 4px;
       }
@@ -185,6 +238,15 @@
   <body>
     <h1>Student Updates</h1>
     <p class="subtitle">Select a student to view their Airtable records.</p>
+
+    <div class="filter-bar shortcuts-box">
+      <label>Helpful shortcuts</label>
+      <div class="shortcuts-links">
+        <a href="https://portal.ivyprep.com.sg/" target="_blank">Airtable Portal</a>
+        <a href="https://docs.google.com/spreadsheets/d/1P_2A43kCkBhTubo-WtRHR_oWg5C1YcofikC8p4i4nf4/edit?gid=408820543#gid=408820543" target="_blank">Sessions overview</a>
+        <a href="https://docs.google.com/spreadsheets/d/1VU8fyN67q6xr-m8VngIzkHPs2lsiRB5jNH0Kc2ZU8Bw/edit?gid=0#gid=0" target="_blank">Session Summary</a>
+      </div>
+    </div>
 
     <div class="filter-bar">
       <label for="studentFilter">Filter by student</label>
