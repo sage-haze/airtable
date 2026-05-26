@@ -9,10 +9,39 @@
         margin: 40px auto;
         padding: 0 20px;
         background: #f7f7f7;
+        color: #111827;
       }
 
       h1 {
+        margin-bottom: 8px;
+      }
+
+      .subtitle {
+        color: #6b7280;
         margin-bottom: 24px;
+      }
+
+      .filter-bar {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+      }
+
+      select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+        background: white;
       }
 
       .record {
@@ -29,9 +58,10 @@
         margin-bottom: 8px;
       }
 
-      .module {
+      .record-meta {
         color: #555;
         margin-bottom: 16px;
+        line-height: 1.5;
       }
 
       .field {
@@ -52,18 +82,28 @@
 
   <body>
     <h1>Student Updates</h1>
+    <p class="subtitle">Select a student to view their Airtable records.</p>
+
+    <div class="filter-bar">
+      <label for="studentFilter">Filter by student</label>
+      <select id="studentFilter" disabled>
+        <option>Loading students...</option>
+      </select>
+    </div>
+
     <div id="records">Loading Airtable data...</div>
 
     <script>
-      const fieldsToDisplay = [
-        "student_full_name",
-        "Date",
-        "Duration",
-        "Module",
-        "Summary",
-        "Tasks Assigned",
-        "What we'll cover next time",
-      ];
+      let allRecords = [];
+
+      function escapeHtml(value) {
+        return String(value)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
 
       function formatValue(value) {
         if (value === undefined || value === null || value === "") {
@@ -71,18 +111,96 @@
         }
 
         if (Array.isArray(value)) {
-          return value.join(", ");
+          return escapeHtml(value.join(", "));
         }
 
         if (typeof value === "object") {
-          return JSON.stringify(value, null, 2);
+          return `<pre>${escapeHtml(JSON.stringify(value, null, 2))}</pre>`;
         }
 
-        return String(value).replace(/\n/g, "<br>");
+        return escapeHtml(value).replace(/\n/g, "<br>");
+      }
+
+      function getStudentName(record) {
+        return record.fields["student_full_name"] || "Unnamed student";
+      }
+
+      function setupStudentFilter(records) {
+        const filter = document.getElementById("studentFilter");
+
+        const studentNames = [...new Set(records.map(getStudentName))].sort();
+
+        if (studentNames.length === 0) {
+          filter.innerHTML = "<option>No students found</option>";
+          filter.disabled = true;
+          return;
+        }
+
+        filter.innerHTML = studentNames
+          .map((name) => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`)
+          .join("");
+
+        filter.disabled = false;
+        filter.value = studentNames[0];
+
+        filter.addEventListener("change", () => {
+          renderRecords(filter.value);
+        });
+
+        renderRecords(filter.value);
+      }
+
+      function renderRecords(selectedStudentName) {
+        const container = document.getElementById("records");
+
+        const filteredRecords = allRecords.filter(
+          (record) => getStudentName(record) === selectedStudentName
+        );
+
+        if (filteredRecords.length === 0) {
+          container.innerHTML = '<p class="empty">No records found for this student.</p>';
+          return;
+        }
+
+        container.innerHTML = filteredRecords
+          .map((record) => {
+            const fields = record.fields;
+
+            return `
+              <div class="record">
+                <div class="student-name">
+                  ${formatValue(fields["student_full_name"])}
+                </div>
+
+                <div class="record-meta">
+                  <div><strong>Date:</strong> ${formatValue(fields["Date"])}</div>
+                  <div><strong>Duration:</strong> ${formatValue(fields["Duration"])}</div>
+                  <div><strong>Module:</strong> ${formatValue(fields["Module"])}</div>
+                </div>
+
+                <div class="field">
+                  <div class="field-label">Summary</div>
+                  <div>${formatValue(fields["Summary"])}</div>
+                </div>
+
+                <div class="field">
+                  <div class="field-label">Tasks Assigned</div>
+                  <div>${formatValue(fields["Tasks Assigned"])}</div>
+                </div>
+
+                <div class="field">
+                  <div class="field-label">What we'll cover next time</div>
+                  <div>${formatValue(fields["What we'll cover next time"])}</div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
       }
 
       async function loadAirtable() {
         const container = document.getElementById("records");
+        const filter = document.getElementById("studentFilter");
 
         try {
           const res = await fetch("/api/airtable");
@@ -92,56 +210,29 @@
             container.innerHTML = `
               <div class="record">
                 <strong>Error loading Airtable data</strong>
-                <pre>${JSON.stringify(data, null, 2)}</pre>
+                <pre>${escapeHtml(JSON.stringify(data, null, 2))}</pre>
               </div>
             `;
+            filter.innerHTML = "<option>Unable to load students</option>";
             return;
           }
 
           if (!data.records || data.records.length === 0) {
             container.innerHTML = '<p class="empty">No records found.</p>';
+            filter.innerHTML = "<option>No students found</option>";
             return;
           }
 
-          container.innerHTML = data.records
-            .map((record) => {
-              const fields = record.fields;
-
-              return `
-                <div class="record">
-                  <div class="student-name">
-                    ${formatValue(fields["student_full_name"])}
-                  </div>
-
-                  <div class="module">
-                    Module: ${formatValue(fields["Module"])}
-                  </div>
-
-                  <div class="field">
-                    <div class="field-label">Summary</div>
-                    <div>${formatValue(fields["Summary"])}</div>
-                  </div>
-
-                  <div class="field">
-                    <div class="field-label">Tasks Assigned</div>
-                    <div>${formatValue(fields["Tasks Assigned"])}</div>
-                  </div>
-
-                  <div class="field">
-                    <div class="field-label">What we'll cover next time</div>
-                    <div>${formatValue(fields["What we'll cover next time"])}</div>
-                  </div>
-                </div>
-              `;
-            })
-            .join("");
+          allRecords = data.records;
+          setupStudentFilter(allRecords);
         } catch (error) {
           container.innerHTML = `
             <div class="record">
               <strong>Something went wrong</strong>
-              <p>${error.message}</p>
+              <p>${escapeHtml(error.message)}</p>
             </div>
           `;
+          filter.innerHTML = "<option>Unable to load students</option>";
         }
       }
 
